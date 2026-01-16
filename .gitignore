@@ -1,0 +1,24 @@
+# Root ignores (monorepo)
+
+# Java/Maven/Gradle
+**/target/
+**/build/
+
+# Node
+**/node_modules/
+**/dist/
+**/dist-ssr/
+
+# Logs
+*.log
+
+# IDE/editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.iml
+.DS_Store
+
+# OS
+Thumbs.db
