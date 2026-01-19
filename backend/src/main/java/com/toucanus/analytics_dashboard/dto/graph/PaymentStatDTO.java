@@ -1,4 +1,4 @@
-package com.toucanus.analytics_dashboard.dto;
+package com.toucanus.analytics_dashboard.dto.graph;
 
 import com.toucanus.analytics_dashboard.enums.PaymentMethod;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PaymentStatDTO {
 
-    private PaymentMethod method;
+    private PaymentMethod paymentMethod;
 
     private Long count;
 }

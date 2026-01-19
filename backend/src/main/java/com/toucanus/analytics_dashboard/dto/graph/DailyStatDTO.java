@@ -1,4 +1,4 @@
-package com.toucanus.analytics_dashboard.dto;
+package com.toucanus.analytics_dashboard.dto.graph;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
