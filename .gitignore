@@ -3,6 +3,11 @@
 # Java/Maven/Gradle
 **/target/
 **/build/
+*/.mvn
+*/mvnw.cmd
+*/mvnw
+
+analytics-dashboard.code-workspace
 
 # Node
 **/node_modules/
