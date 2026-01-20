@@ -15,6 +15,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Sector,
 } from 'recharts';
 import { Calendar, DollarSign, CheckCircle, TrendingUp, Activity, Filter } from 'lucide-react';
 import {
@@ -25,21 +26,31 @@ import {
   getHourlyTraffic,
 } from '../lib/api';
 
-const DONUT_COLORS = ['#10b981', '#f97316', '#f59e0b', '#22c55e'];
-const STATUS_COLORS = { success: '#10b981', failed: '#f97316', pending: '#f59e0b' };
+const COLORS = {
+  emerald: '#10b981',
+  green: '#22c55e',
+  red: '#ef4444',
+  orange: '#f97316',
+  amber: '#f59e0b',
+  black: '#18181b',
+  zinc: '#71717a'
+};
+
+const DONUT_COLORS = [COLORS.emerald, COLORS.orange, COLORS.amber, COLORS.green];
+const STATUS_COLORS = { success: COLORS.emerald, failed: COLORS.red, pending: COLORS.amber };
 
 function CustomTooltip({ active, payload, label, formatter }) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-zinc-900 text-white px-4 py-3 rounded-lg shadow-xl border border-zinc-700">
-        <p className="text-xs text-slate-400 mb-2">{label}</p>
+      <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-3 rounded-lg shadow-xl border border-slate-200 dark:border-zinc-700">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{label}</p>
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <span
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: entry.color }}
             ></span>
-            <span className="text-slate-300">{entry.name}:</span>
+            <span className="text-slate-600 dark:text-slate-300">{entry.name}:</span>
             <span className="font-semibold">
               {formatter ? formatter(entry.value, entry.name) : entry.value.toLocaleString()}
             </span>
@@ -53,31 +64,76 @@ function CustomTooltip({ active, payload, label, formatter }) {
 
 function MiniStatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 flex items-center gap-4 hover:border-emerald-500/30 transition-all">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-slate-200 dark:border-zinc-800 flex items-center gap-4 hover:border-emerald-500/30 transition-all">
       <div className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center`}>
         <Icon className="w-5 h-5 text-white" />
       </div>
       <div>
-        <p className="text-lg font-bold text-white">{value}</p>
-        <p className="text-xs text-zinc-400">{label}</p>
+        <p className="text-lg font-bold text-slate-900 dark:text-white">{value}</p>
+        <p className="text-xs text-slate-500 dark:text-zinc-400">{label}</p>
       </div>
     </div>
   );
 }
 
-function ChartCard({ title, children, className = '' }) {
+function ChartCard({ title, children, className = '', headerRight }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className={`bg-zinc-900 rounded-2xl p-6 border border-zinc-800 ${className}`}
+      className={`bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-200 dark:border-zinc-800 ${className}`}
     >
-      <h3 className="text-base font-semibold text-white mb-4">{title}</h3>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
+        {headerRight}
+      </div>
       {children}
     </motion.div>
   );
 }
+
+// Custom Legend for Pie Chart with progress bars
+const renderCustomLegend = (props, activeIndex) => {
+  const { payload } = props;
+  const total = payload.reduce((acc, entry) => acc + entry.payload.count, 0);
+
+  return (
+    <ul className="flex flex-col gap-3 mt-4">
+      {payload.map((entry, index) => {
+        const percent = ((entry.payload.count / total) * 100).toFixed(1);
+        const isActive = index === activeIndex;
+        return (
+          <li 
+            key={`item-${index}`} 
+            className={`text-xs transition-all duration-200 ${
+              isActive 
+                ? 'text-zinc-900 dark:text-white scale-105 origin-left' 
+                : 'text-zinc-700 dark:text-zinc-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center">
+                <div 
+                  className={`w-2.5 h-2.5 rounded-full mr-2 transition-transform duration-200 ${isActive ? 'scale-125' : ''}`} 
+                  style={{ backgroundColor: entry.color }} 
+                />
+                <span className={`font-medium ${isActive ? 'font-bold' : ''}`}>{entry.value}</span>
+              </div>
+              <span className={`font-semibold ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>{percent}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${isActive ? 'h-2' : ''}`}
+                style={{ width: `${percent}%`, backgroundColor: entry.color }}
+              />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
 
 export default function Analytics() {
   const [stats, setStats] = useState(null);
@@ -85,6 +141,7 @@ export default function Analytics() {
   const [paymentData, setPaymentData] = useState([]);
   const [hourlyData, setHourlyData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(-1);
   
   // Date range state
   const [startDate, setStartDate] = useState(() => {
@@ -145,31 +202,31 @@ export default function Analytics() {
       {/* Header with Date Range Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-white">Analytics</h1>
-          <p className="text-zinc-400 text-sm mt-0.5">Detailed charts and insights</p>
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Analytics</h1>
+          <p className="text-slate-500 dark:text-zinc-400 text-sm mt-0.5">Detailed charts and insights</p>
         </div>
         
         {/* Date Range Filter */}
-        <div className="flex items-center gap-3 bg-zinc-900 rounded-xl border border-zinc-700 p-2">
+        <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-700 p-2">
           <div className="flex items-center gap-2 px-3">
-            <Calendar className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm text-zinc-400">From</span>
+            <Calendar className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+            <span className="text-sm text-slate-500 dark:text-zinc-400">From</span>
           </div>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="px-3 py-1.5 text-sm bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+            className="px-3 py-1.5 text-sm bg-stone-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           />
-          <span className="text-zinc-600">—</span>
+          <span className="text-slate-400 dark:text-zinc-600">—</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-400">To</span>
+            <span className="text-sm text-slate-500 dark:text-zinc-400">To</span>
           </div>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="px-3 py-1.5 text-sm bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+            className="px-3 py-1.5 text-sm bg-stone-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           />
           <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-orange-500 rounded-lg hover:from-emerald-600 hover:to-orange-600 transition-colors">
             <Filter className="w-4 h-4" />
@@ -256,24 +313,46 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Donut Chart */}
+        {/* Donut Chart with Custom Legend */}
         <ChartCard title="Payment Methods">
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={paymentData}
                 cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={95}
-                paddingAngle={3}
+                cy="40%"
+                innerRadius={55}
+                outerRadius={80}
+                paddingAngle={4}
                 dataKey="count"
                 nameKey="paymentMethod"
+                stroke="none"
+                activeIndex={activeIndex}
+                activeShape={(props) => {
+                  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+                  return (
+                    <g>
+                      <Sector
+                        cx={cx}
+                        cy={cy}
+                        innerRadius={innerRadius - 4}
+                        outerRadius={outerRadius + 8}
+                        startAngle={startAngle}
+                        endAngle={endAngle}
+                        fill={fill}
+                        style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2))' }}
+                      />
+                    </g>
+                  );
+                }}
+                onMouseEnter={(_, index) => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(-1)}
               >
                 {paymentData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={DONUT_COLORS[index % DONUT_COLORS.length]}
+                    style={{ cursor: 'pointer' }}
                   />
                 ))}
               </Pie>
@@ -281,8 +360,8 @@ export default function Analytics() {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-zinc-900 text-white px-3 py-2 rounded-lg text-sm border border-zinc-700">
-                        <p className="font-semibold text-emerald-400">{payload[0].name}</p>
+                      <div className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-zinc-700">
+                        <p className="font-semibold text-emerald-500 dark:text-emerald-400">{payload[0].name}</p>
                         <p>{payload[0].value.toLocaleString()} txns</p>
                       </div>
                     );
@@ -290,14 +369,7 @@ export default function Analytics() {
                   return null;
                 }}
               />
-              <Legend
-                layout="vertical"
-                align="right"
-                verticalAlign="middle"
-                iconType="circle"
-                iconSize={8}
-                wrapperStyle={{ fontSize: 12 }}
-              />
+              <Legend content={(props) => renderCustomLegend(props, activeIndex)} verticalAlign="bottom" />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -306,7 +378,7 @@ export default function Analytics() {
       {/* Bottom Row Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Stacked Status Bar */}
-        <ChartCard title="Transaction Health">
+        <ChartCard title=" Daily Transaction Traffic">
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={dailyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
@@ -336,7 +408,7 @@ export default function Analytics() {
               <Bar
                 dataKey="failedCount"
                 stackId="status"
-                fill={STATUS_COLORS.failed}
+                fill={COLORS.red}
                 name="Failed"
                 radius={[4, 4, 0, 0]}
               />
@@ -344,85 +416,44 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Hourly Traffic */}
-        <ChartCard title="Hourly Traffic Distribution">
+        {/* Hourly Traffic (Line Graph with Peak Issues) */}
+        <ChartCard 
+          title="Hourly Peak Traffic" 
+          headerRight={
+            hourlyData.length > 0 && (() => {
+              const peakHour = hourlyData.reduce((max, curr) => 
+                (curr.pendingCount + curr.failedCount) > (max.pendingCount + max.failedCount) ? curr : max
+              , hourlyData[0]);
+              const peakIssues = peakHour.pendingCount + peakHour.failedCount;
+              return (
+                <div className="text-right bg-orange-500/10 dark:bg-orange-500/15 px-3 py-2 rounded-lg border border-orange-500/20">
+                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Peak Issues</p>
+                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{peakHour.hour}:00</p>
+                  <p className="text-[10px] text-zinc-500">{peakIssues} pending+failed</p>
+                </div>
+              );
+            })()
+          }
+        >
           <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={hourlyData}>
-              <defs>
-                <linearGradient id="successGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="pendingGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="failedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
+            <ComposedChart data={hourlyData} margin={{ left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
               <XAxis
                 dataKey="hour"
                 tick={{ fontSize: 12, fill: '#71717a' }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(h) => `${h}:00`}
+                tickFormatter={(h) => `${h}h`}
+                dy={10}
               />
               <YAxis tick={{ fontSize: 12, fill: '#71717a' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const total = payload.reduce((sum, p) => sum + (p.value || 0), 0);
-                    return (
-                      <div className="bg-zinc-900 text-white px-4 py-3 rounded-lg shadow-xl border border-zinc-700">
-                        <p className="text-xs text-zinc-400 mb-2">{label}:00 - {label}:59</p>
-                        <p className="font-semibold text-lg text-emerald-400">{total} transactions</p>
-                        <div className="mt-2 space-y-1 text-sm">
-                          {payload.map((p, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <span
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: p.color }}
-                              ></span>
-                              <span className="text-zinc-300">{p.name}:</span>
-                              <span>{p.value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend wrapperStyle={{ paddingTop: 16 }} iconType="circle" iconSize={8} />
-              <Area 
-                type="monotone" 
-                dataKey="successCount" 
-                stroke="#10b981" 
-                strokeWidth={2}
-                fill="url(#successGradient)" 
-                name="Success" 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="pendingCount" 
-                stroke="#f59e0b" 
-                strokeWidth={2}
-                fill="url(#pendingGradient)" 
-                name="Pending" 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="failedCount" 
-                stroke="#f97316" 
-                strokeWidth={2}
-                fill="url(#failedGradient)" 
-                name="Failed" 
-              />
-            </AreaChart>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              
+              <Line type="monotone" dataKey="successCount" name="Success" stroke={COLORS.emerald} strokeWidth={2} dot={{ r: 3, fill: COLORS.emerald }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="pendingCount" name="Pending" stroke={COLORS.amber} strokeWidth={2} dot={{ r: 3, fill: COLORS.amber }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="failedCount" name="Failed" stroke={COLORS.red} strokeWidth={2} dot={{ r: 3, fill: COLORS.red }} activeDot={{ r: 5 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>

@@ -38,11 +38,11 @@ const STATUS_COLORS = {
 
 function KPICard({ title, value, icon: Icon, trend, color }) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-zinc-800">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{value}</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">{title}</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{value}</p>
           {trend && (
             <p className={`text-sm mt-2 ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% from last period
@@ -59,8 +59,8 @@ function KPICard({ title, value, icon: Icon, trend, color }) {
 
 function ChartCard({ title, children }) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-zinc-800">
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{title}</h3>
       {children}
     </div>
   );
@@ -98,7 +98,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-emerald-400"></div>
       </div>
     );
   }
@@ -118,8 +118,8 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 mt-1">Welcome back! Here's your analytics overview.</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+        <p className="text-slate-500 dark:text-zinc-400 mt-1">Welcome back! Here's your analytics overview.</p>
       </div>
 
       {/* KPI Cards */}
@@ -156,28 +156,32 @@ export default function Dashboard() {
         <ChartCard title="Transaction Trends (Last 7 Days)">
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-zinc-700" />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 12, fill: '#64748b' }}
+                tick={{ fontSize: 12 }}
+                className="fill-slate-500 dark:fill-zinc-400"
               />
               <YAxis
                 yAxisId="left"
-                tick={{ fontSize: 12, fill: '#64748b' }}
+                tick={{ fontSize: 12 }}
                 tickFormatter={(v) => v.toLocaleString()}
+                className="fill-slate-500 dark:fill-zinc-400"
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fontSize: 12, fill: '#64748b' }}
+                tick={{ fontSize: 12 }}
                 tickFormatter={formatCurrency}
+                className="fill-slate-500 dark:fill-zinc-400"
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--tooltip-bg, #fff)',
+                  border: '1px solid var(--tooltip-border, #e2e8f0)',
                   borderRadius: '8px',
+                  color: 'var(--tooltip-text, #1e293b)',
                 }}
                 formatter={(value, name) =>
                   name === 'totalAmount' ? formatCurrency(value) : value.toLocaleString()
@@ -208,18 +212,20 @@ export default function Dashboard() {
         <ChartCard title="Status Breakdown (Last 7 Days)">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-zinc-700" />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 12, fill: '#64748b' }}
+                tick={{ fontSize: 12 }}
+                className="fill-slate-500 dark:fill-zinc-400"
               />
-              <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+              <YAxis tick={{ fontSize: 12 }} className="fill-slate-500 dark:fill-zinc-400" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--tooltip-bg, #fff)',
+                  border: '1px solid var(--tooltip-border, #e2e8f0)',
                   borderRadius: '8px',
+                  color: 'var(--tooltip-text, #1e293b)',
                 }}
               />
               <Legend />
@@ -256,9 +262,10 @@ export default function Dashboard() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--tooltip-bg, #fff)',
+                  border: '1px solid var(--tooltip-border, #e2e8f0)',
                   borderRadius: '8px',
+                  color: 'var(--tooltip-text, #1e293b)',
                 }}
               />
             </PieChart>
@@ -269,18 +276,20 @@ export default function Dashboard() {
         <ChartCard title="Hourly Traffic Distribution">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={hourlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-zinc-700" />
               <XAxis
                 dataKey="hour"
-                tick={{ fontSize: 12, fill: '#64748b' }}
+                tick={{ fontSize: 12 }}
                 tickFormatter={(h) => `${h}:00`}
+                className="fill-slate-500 dark:fill-zinc-400"
               />
-              <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+              <YAxis tick={{ fontSize: 12 }} className="fill-slate-500 dark:fill-zinc-400" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--tooltip-bg, #fff)',
+                  border: '1px solid var(--tooltip-border, #e2e8f0)',
                   borderRadius: '8px',
+                  color: 'var(--tooltip-text, #1e293b)',
                 }}
                 labelFormatter={(h) => `${h}:00 - ${h}:59`}
               />
