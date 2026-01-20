@@ -13,7 +13,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions", indexes = {
+    @Index(name = "idx_txn_status", columnList = "status"),
+    @Index(name = "idx_txn_created_at", columnList = "created_at"),
+    @Index(name = "idx_txn_payment_method", columnList = "payment_method"),
+    @Index(name = "idx_txn_status_created", columnList = "status, created_at"),
+    @Index(name = "idx_txn_created_status", columnList = "created_at, status")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

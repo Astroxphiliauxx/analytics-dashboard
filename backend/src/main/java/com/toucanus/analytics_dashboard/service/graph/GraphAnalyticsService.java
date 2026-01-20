@@ -5,6 +5,7 @@ import com.toucanus.analytics_dashboard.dto.graph.HourlyStatDTO;
 import com.toucanus.analytics_dashboard.dto.graph.PaymentStatDTO;
 import com.toucanus.analytics_dashboard.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,6 +31,7 @@ public class GraphAnalyticsService {
      * @param startDate the start date (inclusive); defaults to 30 days ago if null
      * @param endDate   the end date (inclusive); defaults to today if null
      */
+    @Cacheable(value = "paymentStats", key = "#startDate?.toString() + '-' + #endDate?.toString()")
     public List<PaymentStatDTO> getPaymentStats(LocalDate startDate, LocalDate endDate) {
         if (endDate == null) {
             endDate = LocalDate.now();
@@ -46,6 +48,7 @@ public class GraphAnalyticsService {
      * @param startDate the start date (inclusive); defaults to 7 days before endDate if null
      * @param endDate   the end date (inclusive); defaults to today if null
      */
+    @Cacheable(value = "dailyAnalytics", key = "#startDate?.toString() + '-' + #endDate?.toString()")
     public List<DailyStatusDTO> getDailyStatusStats(LocalDate startDate, LocalDate endDate) {
         if (endDate == null) {
             endDate = LocalDate.now();
@@ -57,10 +60,10 @@ public class GraphAnalyticsService {
         // Calculate the number of days in the range
         long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
 
-        List<Object[]> rows = transactionRepository.selectDailyStatusStats(startDate, endDate);
-        List<Object[]> totals = transactionRepository.selectDailyStatsInRange(startDate, endDate);
+        // Single optimized query that returns all data at once
+        List<Object[]> rows = transactionRepository.selectOptimizedDailyStats(startDate, endDate);
 
-        // Build a map day -> DailyStatusDTO to aggregate per-status counts
+        // Build a map day -> DailyStatusDTO
         Map<LocalDate, DailyStatusDTO> map = new LinkedHashMap<>();
 
         // Pre-fill all days in the range with zero counts
@@ -69,37 +72,17 @@ public class GraphAnalyticsService {
             map.put(d, new DailyStatusDTO(d, 0L, 0L, 0L, BigDecimal.ZERO, 0L));
         }
 
+        // Parse optimized query results: [date, txnCount, totalAmount, successCount, failedCount, pendingCount]
         for (Object[] row : rows) {
             LocalDate day = parseLocalDate(row[0]);
-            String statusStr = String.valueOf(row[1]);
-            long cnt = ((Number) row[2]).longValue();
-
             DailyStatusDTO dto = map.get(day);
-            if (dto == null) {
-                // day outside range, skip
-                continue;
-            }
-            switch (statusStr) {
-                case "SUCCESS" -> dto.setSuccessCount(dto.getSuccessCount() + cnt);
-                case "FAILED" -> dto.setFailedCount(dto.getFailedCount() + cnt);
-                case "PENDING" -> dto.setPendingCount(dto.getPendingCount() + cnt);
-                default -> { /* ignore unknown */ }
-            }
-        }
-
-        // Attach totals and txn counts
-        for (Object[] row : totals) {
-            LocalDate day = parseLocalDate(row[0]);
-            BigDecimal totalAmount = (row[1] instanceof BigDecimal bd)
-                    ? bd
-                    : new BigDecimal(String.valueOf(row[1]));
-            long txnCount = ((Number) row[2]).longValue();
-
-            DailyStatusDTO dto = map.get(day);
-            if (dto != null) {
-                dto.setTotalAmount(totalAmount);
-                dto.setTxnCount(txnCount);
-            }
+            if (dto == null) continue;
+            
+            dto.setTxnCount(((Number) row[1]).longValue());
+            dto.setTotalAmount(row[2] instanceof BigDecimal bd ? bd : new BigDecimal(row[2].toString()));
+            dto.setSuccessCount(((Number) row[3]).longValue());
+            dto.setFailedCount(((Number) row[4]).longValue());
+            dto.setPendingCount(((Number) row[5]).longValue());
         }
 
         return new ArrayList<>(map.values());
@@ -111,6 +94,7 @@ public class GraphAnalyticsService {
      * @param startDate the start date (inclusive); defaults to today if null
      * @param endDate   the end date (inclusive); defaults to today if null
      */
+    @Cacheable(value = "hourlyTraffic", key = "#startDate?.toString() + '-' + #endDate?.toString()")
     public List<HourlyStatDTO> getHourlyTrafficStats(LocalDate startDate, LocalDate endDate) {
         if (endDate == null) {
             endDate = LocalDate.now();
@@ -119,7 +103,8 @@ public class GraphAnalyticsService {
             startDate = endDate;
         }
 
-        List<Object[]> rows = transactionRepository.selectHourlyTrafficStatsInRange(startDate, endDate);
+        // Single optimized query: [hour, successCount, failedCount, pendingCount]
+        List<Object[]> rows = transactionRepository.selectOptimizedHourlyStats(startDate, endDate);
 
         // Pre-fill 0-23 with zero counts per status
         Map<Integer, HourlyStatDTO> hourMap = new LinkedHashMap<>();
@@ -129,15 +114,11 @@ public class GraphAnalyticsService {
 
         for (Object[] row : rows) {
             int hour = ((Number) row[0]).intValue();
-            String statusStr = String.valueOf(row[1]);
-            long cnt = ((Number) row[2]).longValue();
-
             HourlyStatDTO dto = hourMap.get(hour);
-            switch (statusStr) {
-                case "SUCCESS" -> dto.setSuccessCount(dto.getSuccessCount() + cnt);
-                case "FAILED" -> dto.setFailedCount(dto.getFailedCount() + cnt);
-                case "PENDING" -> dto.setPendingCount(dto.getPendingCount() + cnt);
-                default -> { /* ignore unknown */ }
+            if (dto != null) {
+                dto.setSuccessCount(((Number) row[1]).longValue());
+                dto.setFailedCount(((Number) row[2]).longValue());
+                dto.setPendingCount(((Number) row[3]).longValue());
             }
         }
 

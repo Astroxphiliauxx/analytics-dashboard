@@ -16,6 +16,40 @@ import java.util.UUID;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID>, JpaSpecificationExecutor<Transaction> {
 
+	/**
+	 * Single optimized query to get all dashboard stats at once.
+	 * Returns [totalTxns, successCount, pendingCount, failedCount, successAmount, failedAmount]
+	 */
+	@Query(value = """
+	    SELECT 
+	        COUNT(*) as totalTxns,
+	        COUNT(*) FILTER (WHERE status = 'SUCCESS') as successCount,
+	        COUNT(*) FILTER (WHERE status = 'PENDING') as pendingCount,
+	        COUNT(*) FILTER (WHERE status = 'FAILED') as failedCount,
+	        COALESCE(SUM(amount) FILTER (WHERE status = 'SUCCESS'), 0) as successAmount,
+	        COALESCE(SUM(amount) FILTER (WHERE status = 'FAILED'), 0) as failedAmount
+	    FROM transactions
+	    """, nativeQuery = true)
+	List<Object[]> getAggregatedStats();
+
+	/**
+	 * Single optimized query to get all dashboard stats for a date range.
+	 * Returns [totalTxns, successCount, pendingCount, failedCount, successAmount, failedAmount]
+	 */
+	@Query(value = """
+	    SELECT 
+	        COUNT(*) as totalTxns,
+	        COUNT(*) FILTER (WHERE status = 'SUCCESS') as successCount,
+	        COUNT(*) FILTER (WHERE status = 'PENDING') as pendingCount,
+	        COUNT(*) FILTER (WHERE status = 'FAILED') as failedCount,
+	        COALESCE(SUM(amount) FILTER (WHERE status = 'SUCCESS'), 0) as successAmount,
+	        COALESCE(SUM(amount) FILTER (WHERE status = 'FAILED'), 0) as failedAmount
+	    FROM transactions
+	    WHERE created_at::date BETWEEN :startDate AND :endDate
+	    """, nativeQuery = true)
+	List<Object[]> getAggregatedStatsInRange(@Param("startDate") java.time.LocalDate startDate,
+	                                    @Param("endDate") java.time.LocalDate endDate);
+
 	@Query("select coalesce(sum(t.amount), 0) from Transaction t where t.status = :status")
 	BigDecimal selectSumAmountByStatus(@Param("status") TxnStatus status);
 
@@ -35,6 +69,26 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 	@Query("select count(t) from Transaction t where cast(t.createdAt as date) between :startDate and :endDate")
 	Long countInRange(@Param("startDate") java.time.LocalDate startDate,
 	                  @Param("endDate") java.time.LocalDate endDate);
+
+    /**
+     * Optimized daily stats query that returns all needed data in one query.
+     * Returns [date, txnCount, totalAmount, successCount, failedCount, pendingCount].
+     */
+    @Query(value = """
+	    SELECT 
+	        created_at::date as day,
+	        COUNT(*) as txnCount,
+	        COALESCE(SUM(amount), 0) as totalAmount,
+	        COUNT(*) FILTER (WHERE status = 'SUCCESS') as successCount,
+	        COUNT(*) FILTER (WHERE status = 'FAILED') as failedCount,
+	        COUNT(*) FILTER (WHERE status = 'PENDING') as pendingCount
+	    FROM transactions
+	    WHERE created_at::date BETWEEN :startDate AND :endDate
+	    GROUP BY created_at::date
+	    ORDER BY day
+	    """, nativeQuery = true)
+    List<Object[]> selectOptimizedDailyStats(@Param("startDate") java.time.LocalDate startDate,
+                                              @Param("endDate") java.time.LocalDate endDate);
 
 	    @Query(value = """
 		    select cast(t.created_at as date) as day,
@@ -86,6 +140,24 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 		    group by extract(hour from t.created_at), t.status
 		    """, nativeQuery = true)
 	    List<Object[]> selectHourlyTrafficStatsByDate(@Param("date") java.time.LocalDate date);
+
+    /**
+     * Optimized hourly traffic query returning all status counts in one query.
+     * Returns [hour, successCount, failedCount, pendingCount].
+     */
+    @Query(value = """
+	    SELECT 
+	        EXTRACT(HOUR FROM created_at)::int as hour,
+	        COUNT(*) FILTER (WHERE status = 'SUCCESS') as successCount,
+	        COUNT(*) FILTER (WHERE status = 'FAILED') as failedCount,
+	        COUNT(*) FILTER (WHERE status = 'PENDING') as pendingCount
+	    FROM transactions
+	    WHERE created_at::date BETWEEN :startDate AND :endDate
+	    GROUP BY EXTRACT(HOUR FROM created_at)
+	    ORDER BY hour
+	    """, nativeQuery = true)
+    List<Object[]> selectOptimizedHourlyStats(@Param("startDate") java.time.LocalDate startDate,
+                                               @Param("endDate") java.time.LocalDate endDate);
 
     /**
      * Hourly traffic distribution for a date range, grouped by hour and status.
