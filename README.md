@@ -7,6 +7,13 @@ A full-stack analytics dashboard for transaction monitoring and payment analytic
 - **Dashboard overview**
   - Total GTV, total transactions, active users, success rate
   - Average ticket size and operational health indicators
+- **Advanced Date Filtering**
+  - Modern, ocean-themed calendar picker
+  - Persistent date filtering across pages (via Context API)
+- **Data Export**
+  - Export filtered dashboard data and transactions
+  - Support for JSON and CSV formats
+  - Client-side export logic (no extra API calls)
 - **Volume vs Value trend**
   - Daily transaction counts and total amounts over a selected date range
   - Status breakdown (SUCCESS / FAILED / PENDING) per day
@@ -18,9 +25,11 @@ A full-stack analytics dashboard for transaction monitoring and payment analytic
   - Success / failed / pending counts per hour
 - **Transactions table**
   - Paginated list of transactions with filters
+  - Detailed exports (JSON/CSV) for current view
   - Status, amount, user, method, and timestamp columns
 - **Toucan dark theme**
   - Dark UI with black background and emerald/orange accents
+  - Responsive layout with bordered navigation
 
 ## Tech Stack
 
