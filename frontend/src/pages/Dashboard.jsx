@@ -29,28 +29,28 @@ import {
   getHourlyTraffic,
 } from '../lib/api';
 
-const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#1C4D8D', '#4988C4', '#0F2854', '#BDE8F5', '#2E6AA8'];
 const STATUS_COLORS = {
-  success: '#22c55e',
+  success: '#4988C4',
   failed: '#ef4444',
   pending: '#f59e0b',
 };
 
 function KPICard({ title, value, icon: Icon, trend, color }) {
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-zinc-800">
+    <div className="bg-white dark:bg-ocean-800 rounded-3xl p-8 shadow-sm border border-ocean-100 dark:border-ocean-700">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">{title}</p>
-          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{value}</p>
+          <p className="text-base font-medium text-ocean-500 dark:text-ocean-400">{title}</p>
+          <p className="text-4xl font-bold text-ocean-900 dark:text-white mt-3">{value}</p>
           {trend && (
-            <p className={`text-sm mt-2 ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-base mt-3 ${trend >= 0 ? 'text-ocean-500' : 'text-red-600'}`}>
               {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% from last period
             </p>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${color}`}>
+          <Icon className="w-8 h-8 text-white" />
         </div>
       </div>
     </div>
@@ -59,8 +59,8 @@ function KPICard({ title, value, icon: Icon, trend, color }) {
 
 function ChartCard({ title, children }) {
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-zinc-800">
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{title}</h3>
+    <div className="bg-white dark:bg-ocean-800 rounded-3xl p-8 shadow-sm border border-ocean-100 dark:border-ocean-700">
+      <h3 className="text-xl font-semibold text-ocean-900 dark:text-white mb-6">{title}</h3>
       {children}
     </div>
   );
@@ -98,7 +98,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-emerald-400"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-ocean-600 dark:border-ocean-400 border-t-transparent"></div>
       </div>
     );
   }
@@ -115,32 +115,32 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-        <p className="text-slate-500 dark:text-zinc-400 mt-1">Welcome back! Here's your analytics overview.</p>
+        <h1 className="text-7xl font-bold text-ocean-900 dark:text-white" style={{ fontFamily: 'Firlest, serif' }}>Dashboard</h1>
+        <p className="text-ocean-500 dark:text-ocean-400 mt-2 text-lg">Welcome back! Here's your analytics overview.</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <KPICard
           title="Total GTV"
           value={formatCurrency(stats?.totalGtv)}
           icon={DollarSign}
-          color="bg-gradient-to-br from-indigo-500 to-indigo-600"
+          color="bg-gradient-to-br from-ocean-700 to-ocean-900"
         />
         <KPICard
           title="New Users Today"
           value={stats?.newUsersToday?.toLocaleString() || 0}
           icon={Users}
-          color="bg-gradient-to-br from-green-500 to-green-600"
+          color="bg-gradient-to-br from-ocean-500 to-ocean-700"
         />
         <KPICard
           title="Success Rate"
           value={`${stats?.successRate?.toFixed(1) || 0}%`}
           icon={CheckCircle}
-          color="bg-gradient-to-br from-emerald-500 to-emerald-600"
+          color="bg-gradient-to-br from-ocean-400 to-ocean-600"
         />
         <KPICard
           title="Failed Volume"
@@ -151,28 +151,28 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Trends Chart (Dual Axis) */}
         <ChartCard title="Transaction Trends (Last 7 Days)">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={420}>
             <ComposedChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-zinc-700" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 12 }}
-                className="fill-slate-500 dark:fill-zinc-400"
+                tick={{ fontSize: 14 }}
+                className="fill-ocean-500 dark:fill-ocean-400"
               />
               <YAxis
                 yAxisId="left"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 14 }}
                 tickFormatter={(v) => v.toLocaleString()}
-                className="fill-slate-500 dark:fill-zinc-400"
+                className="fill-ocean-500 dark:fill-ocean-400"
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 14 }}
                 tickFormatter={formatCurrency}
                 className="fill-slate-500 dark:fill-zinc-400"
               />
@@ -191,17 +191,17 @@ export default function Dashboard() {
               <Bar
                 yAxisId="left"
                 dataKey="txnCount"
-                fill="#6366f1"
-                radius={[4, 4, 0, 0]}
+                fill="#1C4D8D"
+                radius={[6, 6, 0, 0]}
                 name="Transactions"
               />
               <Line
                 yAxisId="right"
                 type="monotone"
                 dataKey="totalAmount"
-                stroke="#22c55e"
-                strokeWidth={3}
-                dot={{ fill: '#22c55e', strokeWidth: 2 }}
+                stroke="#4988C4"
+                strokeWidth={4}
+                dot={{ fill: '#4988C4', strokeWidth: 3 }}
                 name="Volume"
               />
             </ComposedChart>
@@ -210,16 +210,16 @@ export default function Dashboard() {
 
         {/* Status Split (Stacked Bar) */}
         <ChartCard title="Status Breakdown (Last 7 Days)">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={420}>
             <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-zinc-700" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 12 }}
-                className="fill-slate-500 dark:fill-zinc-400"
+                tick={{ fontSize: 14 }}
+                className="fill-ocean-500 dark:fill-ocean-400"
               />
-              <YAxis tick={{ fontSize: 12 }} className="fill-slate-500 dark:fill-zinc-400" />
+              <YAxis tick={{ fontSize: 14 }} className="fill-ocean-500 dark:fill-ocean-400" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'var(--tooltip-bg, #fff)',
@@ -231,24 +231,24 @@ export default function Dashboard() {
               <Legend />
               <Bar dataKey="successCount" stackId="a" fill={STATUS_COLORS.success} name="Success" radius={[0, 0, 0, 0]} />
               <Bar dataKey="pendingCount" stackId="a" fill={STATUS_COLORS.pending} name="Pending" />
-              <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
       {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Payment Mix (Donut) */}
         <ChartCard title="Payment Method Distribution">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={420}>
             <PieChart>
               <Pie
                 data={paymentData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={100}
+                innerRadius={80}
+                outerRadius={140}
                 paddingAngle={5}
                 dataKey="count"
                 nameKey="paymentMethod"
@@ -274,16 +274,16 @@ export default function Dashboard() {
 
         {/* Hourly Traffic */}
         <ChartCard title="Hourly Traffic Distribution">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={420}>
             <BarChart data={hourlyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-zinc-700" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
               <XAxis
                 dataKey="hour"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 14 }}
                 tickFormatter={(h) => `${h}:00`}
-                className="fill-slate-500 dark:fill-zinc-400"
+                className="fill-ocean-500 dark:fill-ocean-400"
               />
-              <YAxis tick={{ fontSize: 12 }} className="fill-slate-500 dark:fill-zinc-400" />
+              <YAxis tick={{ fontSize: 14 }} className="fill-ocean-500 dark:fill-ocean-400" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'var(--tooltip-bg, #fff)',
@@ -296,7 +296,7 @@ export default function Dashboard() {
               <Legend />
               <Bar dataKey="successCount" stackId="a" fill={STATUS_COLORS.success} name="Success" />
               <Bar dataKey="pendingCount" stackId="a" fill={STATUS_COLORS.pending} name="Pending" />
-              <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
