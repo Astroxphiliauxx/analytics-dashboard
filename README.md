@@ -129,6 +129,30 @@ The frontend is a single-page application that consumes the backend REST API and
     - `getDailyAnalytics`, `getPaymentStats`, `getHourlyTraffic`
     - `getTransactions`
 
+## Request Flow
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant React App
+    participant Spring Boot
+    participant Caffeine Cache
+    participant PostgreSQL
+
+    Browser->>React App: Navigate to Analytics
+    React App->>Spring Boot: GET /api/dashboard/stats/filtered
+    Spring Boot->>Caffeine Cache: Check cache
+    alt Cache Hit
+        Caffeine Cache-->>Spring Boot: Return cached data
+    else Cache Miss
+        Spring Boot->>PostgreSQL: Execute optimized query
+        PostgreSQL-->>Spring Boot: Return results
+        Spring Boot->>Caffeine Cache: Store in cache
+    end
+    Spring Boot-->>React App: JSON Response
+    React App-->>Browser: Render Charts
+```
+
 ## Getting Started
 
 ### Prerequisites
