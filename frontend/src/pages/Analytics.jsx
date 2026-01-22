@@ -353,6 +353,7 @@ export default function Analytics() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 bg-gradient-to-r from-white via-ocean-50/50 to-white dark:from-ocean-800 dark:via-ocean-800/80 dark:to-ocean-800 rounded-2xl border border-ocean-200/50 dark:border-ocean-700/50 p-3 shadow-lg shadow-ocean-500/5"
+          id="date-picker"
         >
           {/* Start Date Input */}
           <div className="relative group">
@@ -489,197 +490,204 @@ export default function Analytics() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Trend Chart (Larger) */}
-        <ChartCard title="Revenue Over Time" className="lg:col-span-2">
-          <ResponsiveContainer width="100%" height={420}>
-            <AreaChart data={dailyData}>
-              <defs>
-                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10B981" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatDate}
-                tick={{ fontSize: 14, fill: '#4988C4' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 14, fill: '#4988C4' }}
-                tickFormatter={formatCurrency}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                content={
-                  <CustomTooltip
-                    formatter={(value, name) =>
-                      name === 'totalAmount' || name === 'Volume'
-                        ? formatCurrency(value)
-                        : value.toLocaleString()
-                    }
-                  />
-                }
-              />
-              <Legend wrapperStyle={{ paddingTop: 24, fontSize: '14px' }} />
-              <Area
-                type="monotone"
-                dataKey="totalAmount"
-                stroke="#10B981"
-                strokeWidth={3}
-                fill="url(#revenueGradient)"
-                name="Volume"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
+        <div className="lg:col-span-2" id="chart-revenue-analytics">
+          <ChartCard title="Revenue Over Time">
+            <ResponsiveContainer width="100%" height={420}>
+              <AreaChart data={dailyData}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 14, fill: '#4988C4' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 14, fill: '#4988C4' }}
+                  tickFormatter={formatCurrency}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      formatter={(value, name) =>
+                        name === 'totalAmount' || name === 'Volume'
+                          ? formatCurrency(value)
+                          : value.toLocaleString()
+                      }
+                    />
+                  }
+                />
+                <Legend wrapperStyle={{ paddingTop: 24, fontSize: '14px' }} />
+                <Area
+                  type="monotone"
+                  dataKey="totalAmount"
+                  stroke="#10B981"
+                  strokeWidth={3}
+                  fill="url(#revenueGradient)"
+                  name="Volume"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
-        {/* Donut Chart with Custom Legend */}
-        <ChartCard title="Payment Methods">
-          <ResponsiveContainer width="100%" height={420}>
-            <PieChart>
-              <Pie
-                data={paymentData}
-                cx="50%"
-                cy="40%"
-                innerRadius={55}
-                outerRadius={85}
-                paddingAngle={4}
-                dataKey="count"
-                nameKey="paymentMethod"
-                stroke="none"
-                activeIndex={activeIndex}
-                activeShape={(props) => {
-                  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
-                  return (
-                    <g>
-                      <Sector
-                        cx={cx}
-                        cy={cy}
-                        innerRadius={innerRadius - 4}
-                        outerRadius={outerRadius + 8}
-                        startAngle={startAngle}
-                        endAngle={endAngle}
-                        fill={fill}
-                        style={{ filter: 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25))' }}
+          {/* Donut Chart with Custom Legend */}
+          <div id="chart-payment-analytics">
+            <ChartCard title="Payment Methods">
+              <ResponsiveContainer width="100%" height={420}>
+                <PieChart>
+                  <Pie
+                    data={paymentData}
+                    cx="50%"
+                    cy="40%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={4}
+                    dataKey="count"
+                    nameKey="paymentMethod"
+                    stroke="none"
+                    activeIndex={activeIndex}
+                    activeShape={(props) => {
+                      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+                      return (
+                        <g>
+                          <Sector
+                            cx={cx}
+                            cy={cy}
+                            innerRadius={innerRadius - 4}
+                            outerRadius={outerRadius + 8}
+                            startAngle={startAngle}
+                            endAngle={endAngle}
+                            fill={fill}
+                            style={{ filter: 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25))' }}
+                          />
+                        </g>
+                      );
+                    }}
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
+                    onMouseLeave={() => setActiveIndex(-1)}
+                  >
+                    {paymentData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={DONUT_COLORS[index % DONUT_COLORS.length]}
+                        style={{ cursor: 'pointer' }}
                       />
-                    </g>
-                  );
-                }}
-                onMouseEnter={(_, index) => setActiveIndex(index)}
-                onMouseLeave={() => setActiveIndex(-1)}
-              >
-                {paymentData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={DONUT_COLORS[index % DONUT_COLORS.length]}
-                    style={{ cursor: 'pointer' }}
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white dark:bg-ocean-800 text-ocean-900 dark:text-white px-5 py-3 rounded-xl text-base border border-ocean-200 dark:border-ocean-700">
+                            <p className="font-semibold text-ocean-500 dark:text-ocean-400">{payload[0].name}</p>
+                            <p className="text-lg">{payload[0].value.toLocaleString()} txns</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
-                ))}
-              </Pie>
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
+                  <Legend content={(props) => renderCustomLegend(props, activeIndex)} verticalAlign="bottom" />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+
+          {/* Bottom Row Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Stacked Status Bar */}
+            <div id="chart-daily-analytics">
+              <ChartCard title=" Daily Transaction Traffic">
+                <ResponsiveContainer width="100%" height={380}>
+                  <ComposedChart data={dailyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={formatDate}
+                      tick={{ fontSize: 14, fill: '#4988C4' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 14, fill: '#4988C4' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ paddingTop: 24, fontSize: '14px' }} iconType="circle" iconSize={12} />
+                    <Bar
+                      dataKey="successCount"
+                      stackId="status"
+                      fill={STATUS_COLORS.success}
+                      name="Success"
+                      radius={[0, 0, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="pendingCount"
+                      stackId="status"
+                      fill={STATUS_COLORS.pending}
+                      name="Pending"
+                    />
+                    <Bar
+                      dataKey="failedCount"
+                      stackId="status"
+                      fill={COLORS.red}
+                      name="Failed"
+                      radius={[6, 6, 0, 0]}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            {/* Hourly Traffic (Line Graph with Peak Issues) */}
+            <div id="chart-hourly-analytics">
+              <ChartCard
+                title="Hourly Peak Traffic"
+                headerRight={
+                  hourlyData.length > 0 && (() => {
+                    const peakHour = hourlyData.reduce((max, curr) =>
+                      (curr.pendingCount + curr.failedCount) > (max.pendingCount + max.failedCount) ? curr : max
+                      , hourlyData[0]);
+                    const peakIssues = peakHour.pendingCount + peakHour.failedCount;
                     return (
-                      <div className="bg-white dark:bg-ocean-800 text-ocean-900 dark:text-white px-5 py-3 rounded-xl text-base border border-ocean-200 dark:border-ocean-700">
-                        <p className="font-semibold text-ocean-500 dark:text-ocean-400">{payload[0].name}</p>
-                        <p className="text-lg">{payload[0].value.toLocaleString()} txns</p>
+                      <div className="text-right bg-red-500/20 dark:bg-red-500/25 px-5 py-3 rounded-xl border border-red-500/30">
+                        <p className="text-sm font-medium text-red-600 dark:text-red-400">Peak Issues</p>
+                        <p className="text-2xl font-bold text-red-700 dark:text-red-300"> at {peakHour.hour}:00</p>
+                        <p className="text-sm text-red-600 dark:text-red-400"><span className="font-bold">{peakIssues}</span> pending+failed</p>
                       </div>
                     );
-                  }
-                  return null;
-                }}
-              />
-              <Legend content={(props) => renderCustomLegend(props, activeIndex)} verticalAlign="bottom" />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
+                  })()
+                }
+              >
+                <ResponsiveContainer width="100%" height={380}>
+                  <ComposedChart data={hourlyData} margin={{ left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} />
+                    <XAxis
+                      dataKey="hour"
+                      tick={{ fontSize: 14, fill: '#4988C4' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(h) => `${h}h`}
+                      dy={10}
+                    />
+                    <YAxis tick={{ fontSize: 14, fill: '#4988C4' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }} />
+
+                    <Line type="monotone" dataKey="successCount" name="Success" stroke={'#1a9130'} strokeWidth={3} dot={{ r: 5, fill: '#1a9130' }} activeDot={{ r: 8 }} />
+                    <Line type="monotone" dataKey="pendingCount" name="Pending" stroke={COLORS.amber} strokeWidth={3} dot={{ r: 5, fill: COLORS.amber }} activeDot={{ r: 8 }} />
+                    <Line type="monotone" dataKey="failedCount" name="Failed" stroke={COLORS.red} strokeWidth={3} dot={{ r: 5, fill: COLORS.red }} activeDot={{ r: 8 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Bottom Row Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Stacked Status Bar */}
-        <ChartCard title=" Daily Transaction Traffic">
-          <ResponsiveContainer width="100%" height={380}>
-            <ComposedChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatDate}
-                tick={{ fontSize: 14, fill: '#4988C4' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis tick={{ fontSize: 14, fill: '#4988C4' }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ paddingTop: 24, fontSize: '14px' }} iconType="circle" iconSize={12} />
-              <Bar
-                dataKey="successCount"
-                stackId="status"
-                fill={STATUS_COLORS.success}
-                name="Success"
-                radius={[0, 0, 0, 0]}
-              />
-              <Bar
-                dataKey="pendingCount"
-                stackId="status"
-                fill={STATUS_COLORS.pending}
-                name="Pending"
-              />
-              <Bar
-                dataKey="failedCount"
-                stackId="status"
-                fill={COLORS.red}
-                name="Failed"
-                radius={[6, 6, 0, 0]}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* Hourly Traffic (Line Graph with Peak Issues) */}
-        <ChartCard
-          title="Hourly Peak Traffic"
-          headerRight={
-            hourlyData.length > 0 && (() => {
-              const peakHour = hourlyData.reduce((max, curr) =>
-                (curr.pendingCount + curr.failedCount) > (max.pendingCount + max.failedCount) ? curr : max
-                , hourlyData[0]);
-              const peakIssues = peakHour.pendingCount + peakHour.failedCount;
-              return (
-                <div className="text-right bg-red-500/20 dark:bg-red-500/25 px-5 py-3 rounded-xl border border-red-500/30">
-                  <p className="text-sm font-medium text-red-600 dark:text-red-400">Peak Issues</p>
-                  <p className="text-2xl font-bold text-red-700 dark:text-red-300"> at {peakHour.hour}:00</p>
-                  <p className="text-sm text-red-600 dark:text-red-400"><span className="font-bold">{peakIssues}</span> pending+failed</p>
-                </div>
-              );
-            })()
-          }
-        >
-          <ResponsiveContainer width="100%" height={380}>
-            <ComposedChart data={hourlyData} margin={{ left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} />
-              <XAxis
-                dataKey="hour"
-                tick={{ fontSize: 14, fill: '#4988C4' }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(h) => `${h}h`}
-                dy={10}
-              />
-              <YAxis tick={{ fontSize: 14, fill: '#4988C4' }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }} />
-
-              <Line type="monotone" dataKey="successCount" name="Success" stroke={'#1a9130'} strokeWidth={3} dot={{ r: 5, fill: '#1a9130' }} activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="pendingCount" name="Pending" stroke={COLORS.amber} strokeWidth={3} dot={{ r: 5, fill: COLORS.amber }} activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="failedCount" name="Failed" stroke={COLORS.red} strokeWidth={3} dot={{ r: 5, fill: COLORS.red }} activeDot={{ r: 8 }} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-    </div>
-  );
+      );
 }

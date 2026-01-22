@@ -129,6 +129,7 @@ export default function Dashboard() {
           value={formatCurrency(stats?.totalGtv)}
           icon={DollarSign}
           color="bg-gradient-to-br from-ocean-700 to-ocean-900"
+          id="kpi-gtv"
         />
         <KPICard
           title="New Users Today"
@@ -141,166 +142,177 @@ export default function Dashboard() {
           value={`${stats?.successRate?.toFixed(1) || 0}%`}
           icon={CheckCircle}
           color="bg-gradient-to-br from-ocean-400 to-ocean-600"
+          id="kpi-success"
         />
         <KPICard
           title="Failed Volume"
           value={formatCurrency(stats?.totalFailedVolume)}
           icon={XCircle}
           color="bg-gradient-to-br from-red-500 to-red-600"
+          id="kpi-failed"
         />
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Trends Chart (Dual Axis) */}
-        <ChartCard title="Transaction Trends (Last 7 Days)">
-          <ResponsiveContainer width="100%" height={420}>
-            <ComposedChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatDate}
-                tick={{ fontSize: 14 }}
-                className="fill-ocean-500 dark:fill-ocean-400"
-              />
-              <YAxis
-                yAxisId="left"
-                tick={{ fontSize: 14 }}
-                tickFormatter={(v) => v.toLocaleString()}
-                className="fill-ocean-500 dark:fill-ocean-400"
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tick={{ fontSize: 14 }}
-                tickFormatter={formatCurrency}
-                className="fill-slate-500 dark:fill-zinc-400"
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--tooltip-bg, #fff)',
-                  border: '1px solid var(--tooltip-border, #e2e8f0)',
-                  borderRadius: '8px',
-                  color: 'var(--tooltip-text, #1e293b)',
-                }}
-                formatter={(value, name) =>
-                  name === 'totalAmount' ? formatCurrency(value) : value.toLocaleString()
-                }
-              />
-              <Legend />
-              <Bar
-                yAxisId="left"
-                dataKey="txnCount"
-                fill="#1C4D8D"
-                radius={[6, 6, 0, 0]}
-                name="Transactions"
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="totalAmount"
-                stroke="#4988C4"
-                strokeWidth={4}
-                dot={{ fill: '#4988C4', strokeWidth: 3 }}
-                name="Volume"
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartCard>
+        <div id="chart-revenue">
+          <ChartCard title="Transaction Trends (Last 7 Days)">
+            <ResponsiveContainer width="100%" height={420}>
+              <ComposedChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 14 }}
+                  className="fill-ocean-500 dark:fill-ocean-400"
+                />
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fontSize: 14 }}
+                  tickFormatter={(v) => v.toLocaleString()}
+                  className="fill-ocean-500 dark:fill-ocean-400"
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fontSize: 14 }}
+                  tickFormatter={formatCurrency}
+                  className="fill-slate-500 dark:fill-zinc-400"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg, #fff)',
+                    border: '1px solid var(--tooltip-border, #e2e8f0)',
+                    borderRadius: '8px',
+                    color: 'var(--tooltip-text, #1e293b)',
+                  }}
+                  formatter={(value, name) =>
+                    name === 'totalAmount' ? formatCurrency(value) : value.toLocaleString()
+                  }
+                />
+                <Legend />
+                <Bar
+                  yAxisId="left"
+                  dataKey="txnCount"
+                  fill="#1C4D8D"
+                  radius={[6, 6, 0, 0]}
+                  name="Transactions"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="totalAmount"
+                  stroke="#4988C4"
+                  strokeWidth={4}
+                  dot={{ fill: '#4988C4', strokeWidth: 3 }}
+                  name="Volume"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
 
         {/* Status Split (Stacked Bar) */}
-        <ChartCard title="Status Breakdown (Last 7 Days)">
-          <ResponsiveContainer width="100%" height={420}>
-            <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatDate}
-                tick={{ fontSize: 14 }}
-                className="fill-ocean-500 dark:fill-ocean-400"
-              />
-              <YAxis tick={{ fontSize: 14 }} className="fill-ocean-500 dark:fill-ocean-400" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--tooltip-bg, #fff)',
-                  border: '1px solid var(--tooltip-border, #e2e8f0)',
-                  borderRadius: '8px',
-                  color: 'var(--tooltip-text, #1e293b)',
-                }}
-              />
-              <Legend />
-              <Bar dataKey="successCount" stackId="a" fill={STATUS_COLORS.success} name="Success" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="pendingCount" stackId="a" fill={STATUS_COLORS.pending} name="Pending" />
-              <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+        <div id="chart-status">
+          <ChartCard title="Status Breakdown (Last 7 Days)">
+            <ResponsiveContainer width="100%" height={420}>
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 14 }}
+                  className="fill-ocean-500 dark:fill-ocean-400"
+                />
+                <YAxis tick={{ fontSize: 14 }} className="fill-ocean-500 dark:fill-ocean-400" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg, #fff)',
+                    border: '1px solid var(--tooltip-border, #e2e8f0)',
+                    borderRadius: '8px',
+                    color: 'var(--tooltip-text, #1e293b)',
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="successCount" stackId="a" fill={STATUS_COLORS.success} name="Success" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="pendingCount" stackId="a" fill={STATUS_COLORS.pending} name="Pending" />
+                <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Payment Mix (Donut) */}
-        <ChartCard title="Payment Method Distribution">
-          <ResponsiveContainer width="100%" height={420}>
-            <PieChart>
-              <Pie
-                data={paymentData}
-                cx="50%"
-                cy="50%"
-                innerRadius={80}
-                outerRadius={140}
-                paddingAngle={5}
-                dataKey="count"
-                nameKey="paymentMethod"
-                label={({ paymentMethod, percent }) =>
-                  `${paymentMethod} ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {paymentData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--tooltip-bg, #fff)',
-                  border: '1px solid var(--tooltip-border, #e2e8f0)',
-                  borderRadius: '8px',
-                  color: 'var(--tooltip-text, #1e293b)',
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Payment Mix (Donut) */}
+          <div id="chart-payment">
+            <ChartCard title="Payment Method Distribution">
+              <ResponsiveContainer width="100%" height={420}>
+                <PieChart>
+                  <Pie
+                    data={paymentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={140}
+                    paddingAngle={5}
+                    dataKey="count"
+                    nameKey="paymentMethod"
+                    label={({ paymentMethod, percent }) =>
+                      `${paymentMethod} ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {paymentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--tooltip-bg, #fff)',
+                      border: '1px solid var(--tooltip-border, #e2e8f0)',
+                      borderRadius: '8px',
+                      color: 'var(--tooltip-text, #1e293b)',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
 
-        {/* Hourly Traffic */}
-        <ChartCard title="Hourly Traffic Distribution">
-          <ResponsiveContainer width="100%" height={420}>
-            <BarChart data={hourlyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
-              <XAxis
-                dataKey="hour"
-                tick={{ fontSize: 14 }}
-                tickFormatter={(h) => `${h}:00`}
-                className="fill-ocean-500 dark:fill-ocean-400"
-              />
-              <YAxis tick={{ fontSize: 14 }} className="fill-ocean-500 dark:fill-ocean-400" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--tooltip-bg, #fff)',
-                  border: '1px solid var(--tooltip-border, #e2e8f0)',
-                  borderRadius: '8px',
-                  color: 'var(--tooltip-text, #1e293b)',
-                }}
-                labelFormatter={(h) => `${h}:00 - ${h}:59`}
-              />
-              <Legend />
-              <Bar dataKey="successCount" stackId="a" fill={STATUS_COLORS.success} name="Success" />
-              <Bar dataKey="pendingCount" stackId="a" fill={STATUS_COLORS.pending} name="Pending" />
-              <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+          {/* Hourly Traffic */}
+          <div id="chart-hourly">
+            <ChartCard title="Hourly Traffic Distribution">
+              <ResponsiveContainer width="100%" height={420}>
+                <BarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-ocean-200 dark:stroke-ocean-700" />
+                  <XAxis
+                    dataKey="hour"
+                    tick={{ fontSize: 14 }}
+                    tickFormatter={(h) => `${h}:00`}
+                    className="fill-ocean-500 dark:fill-ocean-400"
+                  />
+                  <YAxis tick={{ fontSize: 14 }} className="fill-ocean-500 dark:fill-ocean-400" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--tooltip-bg, #fff)',
+                      border: '1px solid var(--tooltip-border, #e2e8f0)',
+                      borderRadius: '8px',
+                      color: 'var(--tooltip-text, #1e293b)',
+                    }}
+                    labelFormatter={(h) => `${h}:00 - ${h}:59`}
+                  />
+                  <Legend />
+                  <Bar dataKey="successCount" stackId="a" fill={STATUS_COLORS.success} name="Success" />
+                  <Bar dataKey="pendingCount" stackId="a" fill={STATUS_COLORS.pending} name="Pending" />
+                  <Bar dataKey="failedCount" stackId="a" fill={STATUS_COLORS.failed} name="Failed" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+        </div>
       </div>
     </div>
+    </div >
   );
 }

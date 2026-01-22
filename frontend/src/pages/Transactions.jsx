@@ -16,6 +16,12 @@ const PAYMENT_BADGE = {
   WALLET: 'bg-ocean-400/20 text-ocean-400 dark:text-ocean-300 border border-ocean-400/30',
 };
 
+const TYPE_BADGE = {
+  PAYIN: 'bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30',
+  PAYOUT: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30',
+  REFUND: 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30',
+};
+
 function Badge({ value, colorMap }) {
   const colors = colorMap[value] || 'bg-zinc-700 text-zinc-300';
   return (
@@ -47,6 +53,8 @@ export default function Transactions() {
     status: '',
     paymentMethod: '',
     userEmail: '',
+    userEmail: '',
+    type: '',
     startDate: '',
     endDate: '',
   });
@@ -60,6 +68,7 @@ export default function Transactions() {
       if (filters.status) params.status = filters.status;
       if (filters.paymentMethod) params.paymentMethod = filters.paymentMethod;
       if (filters.userEmail) params.userEmail = filters.userEmail;
+      if (filters.type) params.type = filters.type;
       if (filters.startDate) params.startDate = filters.startDate;
       if (filters.endDate) params.endDate = filters.endDate;
 
@@ -84,11 +93,11 @@ export default function Transactions() {
   };
 
   const clearFilters = () => {
-    setFilters({ status: '', paymentMethod: '', userEmail: '', startDate: '', endDate: '' });
+    setFilters({ status: '', paymentMethod: '', userEmail: '', type: '', startDate: '', endDate: '' });
     setPage(0);
   };
 
-  const hasActiveFilters = filters.status || filters.paymentMethod || filters.userEmail || filters.startDate || filters.endDate;
+  const hasActiveFilters = filters.status || filters.paymentMethod || filters.userEmail || filters.type || filters.startDate || filters.endDate;
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -143,10 +152,10 @@ export default function Transactions() {
       return str;
     };
 
-    let csv = "Transaction ID,User Name,User Email,Amount,Payment Method,Status,Date\n";
+    let csv = "Transaction ID,User Name,User Email,Amount,Type,Payment Method,Status,Date\n";
 
     transactions.forEach(txn => {
-      csv += `${escape(txn.id)},${escape(txn.userName)},${escape(txn.userEmail)},${escape(txn.amount)},${escape(txn.paymentMethod)},${escape(txn.status)},${escape(txn.createdAt)}\n`;
+      csv += `${escape(txn.id)},${escape(txn.userName)},${escape(txn.userEmail)},${escape(txn.amount)},${escape(txn.type)},${escape(txn.paymentMethod)},${escape(txn.status)},${escape(txn.createdAt)}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -195,6 +204,7 @@ export default function Transactions() {
                 ? 'bg-gradient-to-r from-ocean-700 to-ocean-500 text-white border-transparent'
                 : 'bg-ocean-50 dark:bg-ocean-900 text-ocean-700 dark:text-ocean-300 border-ocean-200 dark:border-ocean-700 hover:bg-ocean-100 dark:hover:bg-ocean-700'
                 }`}
+              id="filters-panel"
             >
               <Filter className="w-5 h-5" />
               Filters
@@ -209,6 +219,7 @@ export default function Transactions() {
                 onClick={() => setExportOpen(!isExportOpen)}
                 disabled={loading || transactions.length === 0}
                 className="flex items-center gap-3 px-6 py-4 rounded-xl text-lg font-medium bg-ocean-50 dark:bg-ocean-900 text-ocean-700 dark:text-ocean-300 border border-ocean-200 dark:border-ocean-700 hover:bg-ocean-100 dark:hover:bg-ocean-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                id="export-btn"
               >
                 <Download className="w-5 h-5" />
                 Export
@@ -303,6 +314,21 @@ export default function Transactions() {
                 </div>
                 <div>
                   <label className="block text-base font-medium text-ocean-500 dark:text-ocean-400 mb-3">
+                    Type
+                  </label>
+                  <select
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange('type', e.target.value)}
+                    className="w-full px-4 py-3.5 bg-ocean-50 dark:bg-ocean-900 border border-ocean-200 dark:border-ocean-700 rounded-xl text-lg text-ocean-800 dark:text-ocean-200 focus:outline-none focus:ring-2 focus:ring-ocean-500/30"
+                  >
+                    <option value="">All Types</option>
+                    <option value="PAYIN">Payin</option>
+                    <option value="PAYOUT">Payout</option>
+                    <option value="REFUND">Refund</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-base font-medium text-ocean-500 dark:text-ocean-400 mb-3">
                     <Calendar className="w-4 h-4 inline mr-2" />
                     Start Date
                   </label>
@@ -345,6 +371,9 @@ export default function Transactions() {
                   Amount
                 </th>
                 <th className="px-8 py-5 text-left text-base font-semibold text-ocean-600 dark:text-ocean-300 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-8 py-5 text-left text-base font-semibold text-ocean-600 dark:text-ocean-300 uppercase tracking-wider">
                   Payment
                 </th>
                 <th className="px-8 py-5 text-left text-base font-semibold text-ocean-600 dark:text-ocean-300 uppercase tracking-wider">
@@ -360,7 +389,7 @@ export default function Transactions() {
                 [...Array(5)].map((_, i) => <SkeletonRow key={i} />)
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={7} className="px-8 py-20 text-center">
                     <div className="text-ocean-500 dark:text-ocean-400">
                       <p className="text-xl font-medium">No transactions found</p>
                       <p className="text-base mt-2">Try adjusting your filters</p>
@@ -391,6 +420,9 @@ export default function Transactions() {
                       <span className="text-lg font-semibold text-ocean-600 dark:text-ocean-400">
                         {formatCurrency(txn.amount)}
                       </span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <Badge value={txn.type} colorMap={TYPE_BADGE} />
                     </td>
                     <td className="px-8 py-5">
                       <Badge value={txn.paymentMethod} colorMap={PAYMENT_BADGE} />
