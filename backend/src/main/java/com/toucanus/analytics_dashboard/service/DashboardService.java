@@ -25,8 +25,9 @@ public class DashboardService {
     public DashboardStatsDTO getDashboardStats() {
         // Single optimized query for all transaction stats
         List<Object[]> result = transactionRepository.getAggregatedStats();
-        Object[] stats = result.isEmpty() ? new Object[]{0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO} : result.get(0);
-        
+        Object[] stats = result.isEmpty() ? new Object[] { 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO }
+                : result.get(0);
+
         long totalTxns = ((Number) stats[0]).longValue();
         long successTxns = ((Number) stats[1]).longValue();
         long pendingTxns = ((Number) stats[2]).longValue();
@@ -39,7 +40,8 @@ public class DashboardService {
 
         BigDecimal averageTicketSize = BigDecimal.ZERO;
         if (successTxns > 0) {
-            averageTicketSize = totalGtv.divide(BigDecimal.valueOf(successTxns), new MathContext(16, RoundingMode.HALF_UP));
+            averageTicketSize = totalGtv.divide(BigDecimal.valueOf(successTxns),
+                    new MathContext(16, RoundingMode.HALF_UP));
         }
 
         double successRate = (totalTxns == 0)
@@ -54,8 +56,7 @@ public class DashboardService {
                 totalGtv,
                 averageTicketSize,
                 totalFailedVolume,
-                successRate
-        );
+                successRate);
     }
 
     /**
@@ -73,10 +74,14 @@ public class DashboardService {
             startDate = endDate.minusDays(30);
         }
 
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+
         // Single optimized query for all transaction stats
-        List<Object[]> result = transactionRepository.getAggregatedStatsInRange(startDate, endDate);
-        Object[] stats = result.isEmpty() ? new Object[]{0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO} : result.get(0);
-        
+        List<Object[]> result = transactionRepository.getAggregatedStatsInRange(startDateTime, endDateTime);
+        Object[] stats = result.isEmpty() ? new Object[] { 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO }
+                : result.get(0);
+
         long totalTxns = ((Number) stats[0]).longValue();
         long successTxns = ((Number) stats[1]).longValue();
         long pendingTxns = ((Number) stats[2]).longValue();
@@ -89,7 +94,8 @@ public class DashboardService {
 
         BigDecimal averageTicketSize = BigDecimal.ZERO;
         if (successTxns > 0) {
-            averageTicketSize = totalGtv.divide(BigDecimal.valueOf(successTxns), new MathContext(16, RoundingMode.HALF_UP));
+            averageTicketSize = totalGtv.divide(BigDecimal.valueOf(successTxns),
+                    new MathContext(16, RoundingMode.HALF_UP));
         }
 
         double successRate = (totalTxns == 0)
@@ -104,7 +110,6 @@ public class DashboardService {
                 totalGtv,
                 averageTicketSize,
                 totalFailedVolume,
-                successRate
-        );
+                successRate);
     }
 }

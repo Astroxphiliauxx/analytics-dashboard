@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,13 +40,16 @@ public class GraphAnalyticsService {
         if (startDate == null) {
             startDate = endDate.minusDays(30);
         }
-        return transactionRepository.selectPaymentMethodStatsInRange(startDate, endDate);
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        return transactionRepository.selectPaymentMethodStatsInRange(startDateTime, endDateTime);
     }
 
     /**
      * Stacked bar chart: daily counts for SUCCESS, FAILED, PENDING.
      *
-     * @param startDate the start date (inclusive); defaults to 7 days before endDate if null
+     * @param startDate the start date (inclusive); defaults to 7 days before
+     *                  endDate if null
      * @param endDate   the end date (inclusive); defaults to today if null
      */
     @Cacheable(value = "dailyAnalytics", key = "#startDate?.toString() + '-' + #endDate?.toString()")
@@ -56,12 +60,15 @@ public class GraphAnalyticsService {
         if (startDate == null) {
             startDate = endDate.minusDays(6);
         }
-        
+
         // Calculate the number of days in the range
         long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
 
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+
         // Single optimized query that returns all data at once
-        List<Object[]> rows = transactionRepository.selectOptimizedDailyStats(startDate, endDate);
+        List<Object[]> rows = transactionRepository.selectOptimizedDailyStats(startDateTime, endDateTime);
 
         // Build a map day -> DailyStatusDTO
         Map<LocalDate, DailyStatusDTO> map = new LinkedHashMap<>();
@@ -72,12 +79,14 @@ public class GraphAnalyticsService {
             map.put(d, new DailyStatusDTO(d, 0L, 0L, 0L, BigDecimal.ZERO, 0L));
         }
 
-        // Parse optimized query results: [date, txnCount, totalAmount, successCount, failedCount, pendingCount]
+        // Parse optimized query results: [date, txnCount, totalAmount, successCount,
+        // failedCount, pendingCount]
         for (Object[] row : rows) {
             LocalDate day = parseLocalDate(row[0]);
             DailyStatusDTO dto = map.get(day);
-            if (dto == null) continue;
-            
+            if (dto == null)
+                continue;
+
             dto.setTxnCount(((Number) row[1]).longValue());
             dto.setTotalAmount(row[2] instanceof BigDecimal bd ? bd : new BigDecimal(row[2].toString()));
             dto.setSuccessCount(((Number) row[3]).longValue());
@@ -103,8 +112,11 @@ public class GraphAnalyticsService {
             startDate = endDate;
         }
 
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+
         // Single optimized query: [hour, successCount, failedCount, pendingCount]
-        List<Object[]> rows = transactionRepository.selectOptimizedHourlyStats(startDate, endDate);
+        List<Object[]> rows = transactionRepository.selectOptimizedHourlyStats(startDateTime, endDateTime);
 
         // Pre-fill 0-23 with zero counts per status
         Map<Integer, HourlyStatDTO> hourMap = new LinkedHashMap<>();
