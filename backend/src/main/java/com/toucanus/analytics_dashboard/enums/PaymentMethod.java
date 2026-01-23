@@ -1,4 +1,4 @@
-package com.toucanus.analytics_dashboard.enums;
+    package com.toucanus.analytics_dashboard.enums;
 
 public enum PaymentMethod {
     UPI,
